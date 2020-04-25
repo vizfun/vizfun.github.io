@@ -16,6 +16,7 @@ function main(evt) {
     let juliaF = 1.0;
     let lastFrameTime = performance.now() / 1000;
     const dpr = devicePixelRatio;
+    const supportsPointerLock = 'exitPointerLock' in document;
     
     {
         setupWebGL();
@@ -26,33 +27,46 @@ function main(evt) {
         document.addEventListener('load', handleResize);
         setTimeout(handleResize, 100);
 
-        document.addEventListener('mousedown', e => mouseDown(e.clientX, e.clientY));
-        canvas.addEventListener('mousemove', e => mouseMove(e.clientX, e.clientY));
-        document.addEventListener('mouseup', () => mouseUp() );
-        canvas.addEventListener('touchstart', e => mouseDown(e.touches[0].clientX, e.touches[0].clientY));
-        canvas.addEventListener('touchmove', e => mouseMove(e.touches[0].clientX, e.touches[0].clientY));
+        canvas.addEventListener('mousedown', e => { if (e.button === 0) { mouseDown({ x: e.clientX, y: e.clientY }) } });
+        canvas.addEventListener('mousemove', e => mouseMove({ x: e.clientX, y: e.clientY, deltaX: e.movementX, deltaY: e.movementY }));
+        canvas.addEventListener('mouseup', () => mouseUp() );
+        canvas.addEventListener('touchstart', e => mouseDown({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
+        canvas.addEventListener('touchmove', e => mouseMove({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
         canvas.addEventListener('touchend', e => mouseUp());
 
         canvas.addEventListener('touchstart', () => canvas.requestFullscreen());
     }
 
-    function mouseDown(x, y) {
+    function mouseDown({x, y}) {
         hideTutorial();
         julia = true;
-        clientX = x * dpr;
-        clientY = y * dpr;
+        clientX = x;
+        clientY = y;
+        if (supportsPointerLock) {
+            canvas.requestPointerLock();
+        }
     }
 
-    function mouseMove(x, y) {
+    function mouseMove({x, y, deltaX, deltaY}) {
         if (!julia) {
             return;
         }
-        clientX = x * dpr;
-        clientY = y * dpr;
+
+        // pointer lock
+        if (deltaX !== undefined && deltaY !== undefined) {
+            clientX += deltaX / 10;
+            clientY += deltaY / 10;
+        } else {
+            clientX = x;
+            clientY = y;
+        }
     }
 
     function mouseUp() {
         julia = false;
+        if (supportsPointerLock) {
+            document.exitPointerLock();
+        }
     }
     
     function easeInOutCubic(t) {
@@ -63,7 +77,7 @@ function main(evt) {
         if (gl) {
             let now = performance.now() / 1000;
             gl.uniform1f(iTime, Date.now() / 1000 - startTime);
-            gl.uniform2f(iCursorPos, clientX, clientY);
+            gl.uniform2f(iCursorPos, clientX * dpr, clientY * dpr);
             juliaF += (julia ? 1 : -1) * (now-lastFrameTime);
             juliaF = Math.min(1, Math.max(0, juliaF))
             gl.uniform1f(iJulia, easeInOutCubic(juliaF));
