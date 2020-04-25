@@ -37,7 +37,7 @@
         canvas.addEventListener('mousedown', mouseDownHandler);
         canvas.addEventListener('mousemove', e => moveJulia({ x: e.clientX, y: e.clientY, deltaX: e.movementX, deltaY: e.movementY }));
         canvas.addEventListener('mouseup', mouseUpHandler);
-        canvas.addEventListener('touchstart', e => startJulia({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
+        canvas.addEventListener('touchstart', touchStartHandler);
         canvas.addEventListener('touchmove', e => moveJulia({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
         canvas.addEventListener('touchend', e => endJulia());
         canvas.addEventListener('contextmenu', contextMenuHandler);
@@ -53,13 +53,7 @@
     function mouseDownHandler(e) {
         if (!e.button) { // left click
             isMouseDown = true;
-            if (isLocked) {
-                isLocked = false;
-                endJulia();
-                location.hash = '';
-            } else {
-                startJulia({ x: e.clientX, y: e.clientY })
-            }
+            startJulia({ x: e.clientX, y: e.clientY })
         } else if (e.button === 2) { // right click
             if (julia) {
                 isLocked = true;
@@ -83,6 +77,10 @@
         if (isMouseDown) {
             e.preventDefault();
         }
+    }
+
+    function touchStartHandler(e) {
+        startJulia({ x: e.touches[0].clientX, y: e.touches[0].clientY });
     }
 
     function hashChangeHandler(e) {
@@ -119,7 +117,17 @@
         ];
     }
 
+    function unlock() {
+        isLocked = false;
+        endJulia();
+        location.hash = '';
+    }
+
     function startJulia({x, y, b}) {
+        if (isLocked) {
+            unlock();
+            return;
+        }
         hideTutorial();
         julia = true;
         [clientX, clientY] = convertXY(x, y);
