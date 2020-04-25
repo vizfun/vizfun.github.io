@@ -21,17 +21,38 @@ function main(evt) {
         setupWebGL();
         frame();
         canvas = document.querySelector('canvas');
-        canvas.addEventListener('mousemove', e => { if (!julia) { return; } clientX=e.clientX * dpr; clientY=e.clientY * dpr; });
-        document.addEventListener('mousedown', e => { julia = true; clientX=e.clientX * dpr; clientY=e.clientY * dpr; hideTutorial(); });
-        document.addEventListener('mouseup', () => julia = false);
-        canvas.addEventListener('touchstart', e => { julia = true; hideTutorial(); const touch = e.touches[0]; if (!touch) { return; } clientX = touch.clientX * dpr; clientY = touch.clientY * dpr; } );
-        canvas.addEventListener('touchend', e => { if (!e.touches.length) { julia = false } });
-        canvas.addEventListener('touchmove', e => { if (!julia) { return; } const touch = e.touches[0]; if (!touch) { return; } clientX = touch.clientX * dpr; clientY = touch.clientY * dpr; });
+
         window.addEventListener('resize', handleResize);
         document.addEventListener('load', handleResize);
         setTimeout(handleResize, 100);
-    
+
+        document.addEventListener('mousedown', e => mouseDown(e.clientX, e.clientY));
+        canvas.addEventListener('mousemove', e => mouseMove(e.clientX, e.clientY));
+        document.addEventListener('mouseup', () => mouseUp() );
+        canvas.addEventListener('touchstart', e => mouseDown(e.touches[0].clientX, e.touches[0].clientY));
+        canvas.addEventListener('touchmove', e => mouseMove(e.touches[0].clientX, e.touches[0].clientY));
+        canvas.addEventListener('touchend', e => mouseUp());
+
         canvas.addEventListener('touchstart', () => canvas.requestFullscreen());
+    }
+
+    function mouseDown(x, y) {
+        hideTutorial();
+        julia = true;
+        clientX = x * dpr;
+        clientY = y * dpr;
+    }
+
+    function mouseMove(x, y) {
+        if (!julia) {
+            return;
+        }
+        clientX = x * dpr;
+        clientY = y * dpr;
+    }
+
+    function mouseUp() {
+        julia = false;
     }
     
     function easeInOutCubic(t) {
