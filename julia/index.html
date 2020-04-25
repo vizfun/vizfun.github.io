@@ -80,12 +80,12 @@ const dpr = devicePixelRatio;
     setupWebGL();
     frame();
     canvas = document.querySelector('canvas');
-    canvas.addEventListener('mousemove', (e) => { clientX=e.clientX * dpr; clientY=e.clientY * dpr; });
+    canvas.addEventListener('mousemove', (e) => { if (!julia) { return; } clientX=e.clientX * dpr; clientY=e.clientY * dpr; });
     document.addEventListener('mousedown', () => { julia = true; hideTutorial(); });
     document.addEventListener('mouseup', () => julia = false);
     canvas.addEventListener('touchstart', () => { julia = true; hideTutorial(); } );
     canvas.addEventListener('touchend', e => { if (!e.touches.length) { julia = false } });
-    canvas.addEventListener('touchmove', e => { const touch = e.touches[0]; if (!touch) { return; } clientX = touch.clientX * dpr; clientY = touch.clientY * dpr; });
+    canvas.addEventListener('touchmove', e => { if (!julia) { return; } const touch = e.touches[0]; if (!touch) { return; } clientX = touch.clientX * dpr; clientY = touch.clientY * dpr; });
     window.addEventListener('resize', handleResize);
 
     canvas.addEventListener('touchstart', () => canvas.requestFullscreen());
