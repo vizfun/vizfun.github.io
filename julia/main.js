@@ -15,6 +15,9 @@
     let julia = false;
     let juliaF = 1.0;
     let lastFrameTime = performance.now() / 1000;
+    let isLocked = false;
+    let isMouseDown = false;
+    let targetHash = "";
     const dpr = devicePixelRatio;
     const supportsPointerLock = 'exitPointerLock' in document;
 
@@ -28,12 +31,15 @@
         document.addEventListener('load', handleResize);
         setTimeout(handleResize, 100);
 
-        canvas.addEventListener('mousedown', e => { if (e.button === 0) { mouseDown({ x: e.clientX, y: e.clientY }) } });
-        canvas.addEventListener('mousemove', e => mouseMove({ x: e.clientX, y: e.clientY, deltaX: e.movementX, deltaY: e.movementY }));
-        canvas.addEventListener('mouseup', () => mouseUp() );
-        canvas.addEventListener('touchstart', e => mouseDown({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
-        canvas.addEventListener('touchmove', e => mouseMove({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
-        canvas.addEventListener('touchend', e => mouseUp());
+        canvas.addEventListener('mousedown', mouseDownHandler);
+        canvas.addEventListener('mousemove', e => moveJulia({ x: e.clientX, y: e.clientY, deltaX: e.movementX, deltaY: e.movementY }));
+        canvas.addEventListener('mouseup', mouseUpHandler);
+        canvas.addEventListener('touchstart', e => startJulia({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
+        canvas.addEventListener('touchmove', e => moveJulia({ x: e.touches[0].clientX, y: e.touches[0].clientY }));
+        canvas.addEventListener('touchend', e => endJulia());
+        canvas.addEventListener('contextmenu', contextMenuHandler);
+        window.addEventListener('hashchange', hashChangeHandler);
+        hashChangeHandler();
 
         canvas.addEventListener('touchstart', () => canvas.requestFullscreen());
 
@@ -41,37 +47,101 @@
         frame();
     }
 
-    function mouseDown({x, y}) {
-        hideTutorial();
-        julia = true;
+    function mouseDownHandler(e) {
+        if (!e.button) { // left click
+            isMouseDown = true;
+            if (isLocked) {
+                isLocked = false;
+                endJulia();
+                location.hash = '';
+            } else {
+                startJulia({ x: e.clientX, y: e.clientY })
+            }
+        } else if (e.button === 2) { // right click
+            if (julia) {
+                isLocked = true;
+                e.preventDefault();
+                if (supportsPointerLock) {
+                    document.exitPointerLock();
+                }
+                location.hash = targetHash = `#${clientX},${clientY}`
+            }
+        }
+    }
+
+    function mouseUpHandler(e) {
+        if (!e.button) { // left click
+            isMouseDown = false;
+            endJulia();
+        }
+    }
+
+    function contextMenuHandler(e) {
+        if (isMouseDown) {
+            e.preventDefault();
+        }
+    }
+
+    function hashChangeHandler(e) {
+        const hash = location.hash && location.hash.substr(1);
+        if (!hash || '#' + hash === targetHash) {
+            return;
+        }
+        const [x,y] = hash.split(',').map(a => parseFloat(a));
+        if (!isFinite(x) || !isFinite(y)) {
+            return;
+        }
         clientX = x;
         clientY = y;
+        julia = true;
+        isLocked = true;
+        hideTutorial({instant: true});
+    }
+
+    function convertXY(x, y) {
+        const middleX = x - canvas.clientWidth / 2;
+        const middleY = y - canvas.clientHeight / 2;
+        const maxRes = Math.max(canvas.clientWidth, canvas.clientHeight);
+        return [
+            middleX / maxRes,
+            middleY / maxRes
+        ];
+    }
+
+    function startJulia({x, y, b}) {
+        hideTutorial();
+        julia = true;
+        [clientX, clientY] = convertXY(x, y);
         if (supportsPointerLock) {
             canvas.requestPointerLock();
         }
     }
-
-    function mouseMove({x, y, deltaX, deltaY}) {
-        if (!julia) {
+    function endJulia() {
+        if (!julia || isLocked) {
             return;
         }
 
-        // pointer lock
-        if (deltaX !== undefined && deltaY !== undefined) {
-            clientX += deltaX / 10;
-            clientY += deltaY / 10;
-        } else {
-            clientX = x;
-            clientY = y;
-        }
-    }
-
-    function mouseUp() {
         julia = false;
         if (supportsPointerLock) {
             document.exitPointerLock();
         }
     }
+
+    function moveJulia({x, y, deltaX, deltaY}) {
+        if (!julia || isLocked || !canvas) {
+            return;
+        }
+
+        // pointer lock
+        if (deltaX !== undefined && deltaY !== undefined) {
+            clientX += deltaX / 10 / canvas.clientWidth;
+            clientY += deltaY / 10 / canvas.clientHeight;
+        } else {
+            [clientX, clientY] = convertXY(x, y);
+        }
+    }
+
+
     
     function easeInOutCubic(t) {
         return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
@@ -93,9 +163,14 @@
         requestAnimationFrame(frame);
     }
     
-    function hideTutorial() {
+    function hideTutorial({instant = false}={}) {
         const tutorial = document.getElementById('tutorial');
-        if (tutorial) {
+        if (!tutorial) {
+            return;
+        }
+        if (instant) {
+            tutorial.remove();
+        } else {
             tutorial.classList.add('hidden');
         }
     }

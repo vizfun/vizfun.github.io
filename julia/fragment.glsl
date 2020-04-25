@@ -13,8 +13,7 @@ void main()
 {
     vec2 middleCoord = gl_FragCoord.xy - .5*iResolution.xy;
     vec2 uv = middleCoord / max(iResolution.x, iResolution.y);
-    vec2 middleCursor = iCursorPos - .5*iResolution.xy;
-    vec2 cursorUv = middleCursor / max(iResolution.x, iResolution.y);
+    vec2 cursorUv = iCursorPos;
     float zoom = initZoom;// * pow(1.1, 60.*(1.-cos(iTime/10.)));
     cursorUv /= zoom;
     uv /= zoom;
