@@ -32,7 +32,10 @@
 
         window.addEventListener('resize', handleResize);
         document.addEventListener('load', handleResize);
-        setTimeout(handleResize, 100);
+        // if css loads too late, canvas is not yet properly sized, the window load does seem to work.
+        for (const delay in [100, 500, 1000, 2000]) {
+            setTimeout(handleResize, delay);
+        }
 
         canvas.addEventListener('mousedown', mouseDownHandler);
         canvas.addEventListener('mousemove', e => moveJulia({ x: e.clientX, y: e.clientY, deltaX: e.movementX, deltaY: e.movementY }));
