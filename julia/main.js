@@ -5,6 +5,9 @@
     let buffer;
     let clientX = 0;
     let clientY = 0;
+
+    const zoom = 0.2;
+    const mandelbrotOffset = [-0.75, 0];
     
     let iResolution;
     let iTime;
@@ -101,10 +104,18 @@
     function convertXY(x, y) {
         const middleX = x - canvas.clientWidth / 2;
         const middleY = y - canvas.clientHeight / 2;
+        [x,y] = convertRelativeXY(middleX, middleY);
+        return [
+            x + mandelbrotOffset[0],
+            y + mandelbrotOffset[1]
+        ];
+    }
+
+    function convertRelativeXY(x, y) {
         const maxRes = Math.max(canvas.clientWidth, canvas.clientHeight);
         return [
-            middleX / maxRes,
-            middleY / maxRes
+            x / maxRes / zoom,
+            y / maxRes / zoom
         ];
     }
 
@@ -134,8 +145,9 @@
 
         // pointer lock
         if (deltaX !== undefined && deltaY !== undefined) {
-            clientX += deltaX / 10 / canvas.clientWidth;
-            clientY += deltaY / 10 / canvas.clientHeight;
+            const [dx, dy] = convertRelativeXY(deltaX, deltaY);
+            clientX += dx;
+            clientY += dy;
         } else {
             [clientX, clientY] = convertXY(x, y);
         }

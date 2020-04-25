@@ -15,14 +15,11 @@ void main()
     vec2 uv = middleCoord / max(iResolution.x, iResolution.y);
     vec2 cursorUv = iCursorPos;
     float zoom = initZoom;// * pow(1.1, 60.*(1.-cos(iTime/10.)));
-    cursorUv /= zoom;
     uv /= zoom;
     float pixelSize = 1. / zoom / max(iResolution.x, iResolution.y);
     //uv += vec2(-.549545157957,-.626413507396);
     //uv += vec2(-.24619, .75408);
     uv += vec2(-0.75, 0.0) * (1.0 - iJulia);
-    cursorUv += vec2(-0.75, 0.0);
-
     
     vec3 fraccol = vec3(0.);
     for (float aaxn = 0.; aaxn < AA; ++aaxn) {
