@@ -2,6 +2,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <style type="text/css">
+    body {
+        font-family: sans-serif;
+        padding: 0;
+        margin: 0;
+    }
+
     canvas {
         position: absolute;
         left: 0;
@@ -13,8 +19,41 @@
         width: 100%;
         height: 100%;
     }
+
+    #tutorial {    
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        padding: 20px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        transform: translate(-50%, -50%);
+        font-size: 25px;
+        color: rgba(255, 255, 255, 0.7);
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.7s;
+    }
+
+    #tutorial.hidden {
+        opacity: 0;
+    }
+
+    .touch-version {
+        display: none;
+    }
+
+    @media(hover: none) {
+        .touch-version {
+            display: block;
+        }
+        .non-touch-version {
+            display: none;
+        }
+    }
 </style>
 <title>julia</title>
+
 
 <!-- Based on code snippets from https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/By_example/Hello_GLSL -->
 <script>function main(evt) {
@@ -42,9 +81,9 @@ const dpr = devicePixelRatio;
     frame();
     canvas = document.querySelector('canvas');
     canvas.addEventListener('mousemove', (e) => { clientX=e.clientX * dpr; clientY=e.clientY * dpr; });
-    document.addEventListener('mousedown', () => julia = true);
+    document.addEventListener('mousedown', () => { julia = true; hideTutorial(); });
     document.addEventListener('mouseup', () => julia = false);
-    canvas.addEventListener('touchstart', () => julia = true);
+    canvas.addEventListener('touchstart', () => { julia = true; hideTutorial(); } );
     canvas.addEventListener('touchend', e => { if (!e.touches.length) { julia = false } });
     canvas.addEventListener('touchmove', e => { const touch = e.touches[0]; if (!touch) { return; } clientX = touch.clientX * dpr; clientY = touch.clientY * dpr; });
     window.addEventListener('resize', handleResize);
@@ -70,6 +109,13 @@ function frame() {
     }
 
     requestAnimationFrame(frame);
+}
+
+function hideTutorial() {
+    const tutorial = document.getElementById('tutorial');
+    if (tutorial) {
+        tutorial.classList.add('hidden');
+    }
 }
 
 function cleanup() {
@@ -220,3 +266,9 @@ setTimeout(main, 100);
     }
 </script>
 <canvas>Your browser does not seem to support  HTML5 canvas.</canvas>
+
+
+<div id="tutorial">
+    <span class="touch-version">Tap and hold anywhere</span>
+    <span class="non-touch-version">Click and hold anywhere</span>
+</div>
