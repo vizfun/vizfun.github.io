@@ -1,4 +1,4 @@
-function main(evt) {
+(() => {
     let gl;
     let canvas;
     let program;
@@ -17,10 +17,11 @@ function main(evt) {
     let lastFrameTime = performance.now() / 1000;
     const dpr = devicePixelRatio;
     const supportsPointerLock = 'exitPointerLock' in document;
-    
-    {
-        setupWebGL();
-        frame();
+
+    const vertexShaderPromise = fetch('./vertex.glsl').then(res => res.text());
+    const fragmentShaderPromise = fetch('./fragment.glsl').then(res => res.text());
+
+    async function init() {
         canvas = document.querySelector('canvas');
 
         window.addEventListener('resize', handleResize);
@@ -35,6 +36,9 @@ function main(evt) {
         canvas.addEventListener('touchend', e => mouseUp());
 
         canvas.addEventListener('touchstart', () => canvas.requestFullscreen());
+
+        await setupWebGL();
+        frame();
     }
 
     function mouseDown({x, y}) {
@@ -124,7 +128,7 @@ function main(evt) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     }
     
-    function setupWebGL () {
+    async function setupWebGL () {
         /* getRenderingContext */
         canvas = document.querySelector("canvas");
         gl = canvas.getContext("webgl");
@@ -132,13 +136,13 @@ function main(evt) {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
     
-        let vertexSource = document.querySelector("#vertex-shader").innerHTML;
+        let vertexSource = await vertexShaderPromise;
         let vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
         console.log("vertex shader compilation\n" + gl.getShaderInfoLog(vertexShader));
         
-        let fragmentSource = document.querySelector("#fragment-shader").innerHTML
+        let fragmentSource = await fragmentShaderPromise;
         let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
@@ -179,11 +183,10 @@ function main(evt) {
         iJulia       = gl.getUniformLocation(program, "iJulia");
         
     }
-    
-}
 
-if (document.readyState === "complete" || document.readyState === "loaded" || document.readyState === 'interactive') {
-    main();
-} else {
-    document.addEventListener('DOMContentLoaded', main);
-}
+    if (document.readyState === "complete" || document.readyState === "loaded" || document.readyState === 'interactive') {
+        init();
+    } else {
+        document.addEventListener('DOMContentLoaded', init);
+    }
+})();
