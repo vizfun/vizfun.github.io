@@ -174,7 +174,7 @@
         if (gl) {
             let now = performance.now() / 1000;
             gl.uniform1f(iTime, Date.now() / 1000 - startTime);
-            gl.uniform2f(iCursorPos, clientX * dpr, clientY * dpr);
+            gl.uniform2f(iCursorPos, clientX, clientY);
             juliaF += (julia ? 1 : -1) * (now-lastFrameTime);
             juliaF = Math.min(1, Math.max(0, juliaF))
             gl.uniform1f(iJulia, easeInOutCubic(juliaF));
