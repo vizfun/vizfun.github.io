@@ -156,7 +156,7 @@
 
         // pointer lock
         if (deltaX !== undefined && deltaY !== undefined) {
-            const [dx, dy] = convertRelativeXY(deltaX, deltaY);
+            const [dx, dy] = convertRelativeXY(deltaX / 10, deltaY / 10);
             clientX += dx;
             clientY += dy;
         } else {
